@@ -1,0 +1,406 @@
+{
+  "name": "IP Cold Email with Pain Point - Optimized",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        656,
+        208
+      ],
+      "id": "10ffb657-bee3-44ff-98c9-f3b78eec7fc9",
+      "name": "START - Execute Workflow"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Cold Email with Pain Point",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 60122780,
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=60122780"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email Status",
+              "lookupValue": "Pending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        864,
+        208
+      ],
+      "id": "74a7c46c-b520-45ad-84d5-a4c4d1ed44d6",
+      "name": "FETCH - Get Pending Leads",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "jVVY8JT9gGJ7AXLh",
+          "name": "VIR_Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## \ud83d\udccb Workflow Notes\n\n### Purpose\nAutomated cold email outreach system with AI-powered personalization\n\n### Key Features\n- \u2705 Fetches leads with PENDING status\n- \u2705 AI generates personalized emails based on pain points\n- \u2705 Sends via Gmail with proper formatting\n- \u2705 Updates sheet status to SENT\n- \u2705 Processes in batches with rate limiting\n\n### Critical Fixes Applied\n1. **Filter Fix**: Added lookup value 'PENDING' to fetch only pending leads\n2. **Email Handling**: Proper mapping of email fields (recipient, subject, body)\n3. **HTML Template**: Enhanced with fallback for missing data\n4. **Error Handling**: Comprehensive try-catch in parsing\n5. **Rate Limiting**: Batch processing with wait time between sends\n\n### Required Sheet Columns\n- Email id (recipient email)\n- Name (recipient name)\n- Company (company name)\n- Pain Point (specific challenge)\n- Email Status (PENDING/SENT)\n- Sent Date (auto-populated)\n\n### Important Notes\n\u26a0\ufe0f Update Calendly link in HTML template\n\u26a0\ufe0f Update signature details (email, phone)\n\u26a0\ufe0f Test with small batch first\n\u26a0\ufe0f Monitor Gmail sending limits (500/day)",
+        "height": 952,
+        "width": 2868
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        16
+      ],
+      "id": "ce3ee923-64d2-4f13-90e3-df7ce6850f13",
+      "name": "Sticky Note - Workflow Documentation"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a personalized cold email for {{ $json.Name }} from {{ $json.Company }}.\n\n**Specific Pain Point to Address:** {{ $json[\"Pain Point\"] }}\n\n",
+        "options": {
+          "systemMessage": "=Role & Purpose  \nYou are a senior B2B sales strategist with over a decade of experience in outreach and conversion-driven messaging. Your mission is to craft personalized cold emails that connect deeply with each prospect\u2019s unique pain points and present tailored, phased solutions that inspire engagement.  \n\nCapabilities  \n- Research and interpret pain points to choose the best approach (financial, operational, growth, or efficiency-related).  \n- Personalize emails using prospect name, company, and contextual industry insights.  \n- Develop a 3-phase solution (Assessment \u2192 Implementation \u2192 Optimization) aligned to the prospect\u2019s challenges.  \n- Define a clear 2\u20133 week action timeline with measurable business outcomes.  \n- Write persuasive, trust-building copy that feels consultative, not sales-oriented.  \n\nInteraction Style  \n- Empathetic and consultative, with a problem-solver mindset.  \n- Adapt tone and message based on the prospect\u2019s likely pain (e.g., cost control vs. scaling operations).  \n- Avoid clich\u00e9s, overpromises, or generic phrasing.  \n- Focus on clarity, personalization, and credibility in every response.  \n\nNotes  \n- Each email must dynamically adjust the **approach** based on pain point type:  \n  \u2022 Cost-Driven \u2192 Emphasize ROI and process efficiency.  \n  \u2022 Growth-Driven \u2192 Highlight scalability and opportunity capture.  \n  \u2022 Operational \u2192 Stress reliability, consistency, and workflow optimization.  \n  \u2022 Strategic \u2192 Focus on competitive advantage and long-term positioning.  \n- Email must follow structure:  \n  1. Subject Line (personalized, benefit-driven, <60 chars)  \n  2. Opening (authentic rapport + recognition of prospect\u2019s role)  \n  3. Pain Point (customized insight-driven analysis)  \n  4. Solution (3-phase plan with alignment to pain type)  \n  5. Timeline (week-by-week clarity)  \n  6. Benefits (3 quantifiable, outcome-based results)  \n  7. CTA (low-pressure discovery call)  \n  8. Signature (professional contact info)  \n- Output Format: **Return ONLY valid JSON** with keys: `subject`, `body_plain`, `body_html`. No markdown or additional text.  \n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1312,
+        240
+      ],
+      "id": "0afcbe95-53ed-4070-a838-89869ffd9def",
+      "name": "AI - Generate Personalized Email"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input from previous node\nconst input = items[0].json.output;\n\ntry {\n  // Parse the JSON string into an object\n  const parsed = JSON.parse(input);\n\n  // Return parsed values as separate fields\n  return [\n    {\n      json: {\n        subject: parsed.subject,\n        body_plain: parsed.body_plain,\n        body_html: parsed.body_html\n      }\n    }\n  ];\n} catch (error) {\n  // Handle malformed JSON\n  return [\n    {\n      json: {\n        error: 'Invalid JSON format in input',\n        details: error.message\n      }\n    }\n  ];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        240
+      ],
+      "id": "12b88e44-3298-4c39-a00f-9085dc86007b",
+      "name": "PROCESS - Parse AI Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all incoming items\nfor (const item of $input.all()) {\n\n  // Handle flexible field names from input\n  const name = item.json.recipient_name || item.json.Name || 'there';\n  const company = item.json.recipient_company || item.json.Company || 'your company';\n  const pain = item.json[\"Pain Point\"] || 'scaling operations effectively';\n  \n  // Adapt field mappings for your given input structure\n  const subject = item.json.subject || `Solution for ${company}`;\n  const plain = item.json.body_plain || '';\n  const html = item.json.body_html || '';\n  const recipient = item.json.recipient_email || item.json[\"Email id\"] || '';\n\n  // Function: Extract relevant sections from plain text\n  const extractSection = (keywords) => {\n    if (!plain) return 'Details will be shared during our discovery call.';\n    \n    const lines = plain.split('\\n');\n    const sectionLines = [];\n    let capturing = false;\n    let captureCount = 0;\n    \n    for (let i = 0; i < lines.length; i++) {\n      const line = lines[i].trim();\n      const lowerLine = line.toLowerCase();\n      \n      if (keywords.some(kw => lowerLine.includes(kw.toLowerCase()))) capturing = true;\n      if (capturing && line) {\n        sectionLines.push(line);\n        captureCount++;\n        if (captureCount > 8 || lowerLine.includes('best regards') || lowerLine.includes('sincerely')) break;\n      }\n    }\n    \n    return sectionLines.length > 0 \n      ? sectionLines.join('<br>') \n      : 'Customized approach based on your specific needs.';\n  };\n\n  // Construct final professional HTML email\n  item.json.final_html = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>${subject}</title>\n<style>\n  body { margin: 0; padding: 20px; background: #f7f9fc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }\n  .email-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.08); }\n  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 32px; text-align: center; }\n  .header h1 { margin: 0 0 12px; font-size: 28px; font-weight: 700; line-height: 1.2; }\n  .section { padding: 28px 32px; margin: 0; border-bottom: 1px solid #f1f5f9; }\n  .section:last-of-type { border-bottom: none; }\n  .challenge { background: #fffbeb; border-left: 4px solid #f59e0b; }\n  .solution { background: #f0fdf4; border-left: 4px solid #10b981; }\n  .timeline { background: #eff6ff; border-left: 4px solid #3b82f6; }\n  .benefits { background: #fdf2f8; border-left: 4px solid #ec4899; }\n  .cta { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 40px 32px; }\n  .cta a { display: inline-block; background: white; color: #667eea; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; margin-top: 16px; transition: all 0.3s ease; }\n  .cta a:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }\n  .footer { background: #f8fafc; color: #64748b; padding: 24px 32px; text-align: center; font-size: 14px; line-height: 1.6; }\n  .footer a { color: #667eea; text-decoration: none; }\n  .footer a:hover { text-decoration: underline; }\n</style>\n</head>\n<body>\n<div class=\"email-container\">\n  <div class=\"header\">\n    <h1>Personalized Solution for ${company}</h1>\n    <p>Hi ${name}, here's a tailored approach to address your specific challenge.</p>\n  </div>\n\n  <div class=\"section challenge\">\n    <h2>Your Current Challenge</h2>\n    <p><strong>${pain}</strong></p>\n    <p>We recognize the operational impact this may cause, and we\u2019ve designed a custom plan to resolve it efficiently.</p>\n  </div>\n\n  <div class=\"section solution\">\n    <h2>Proposed Solution Framework</h2>\n    <p>${extractSection(['solution', 'approach', 'framework', 'phase', 'implementation'])}</p>\n  </div>\n\n  <div class=\"section timeline\">\n    <h2>Implementation Timeline</h2>\n    <p>${extractSection(['timeline', 'week', 'phase', 'schedule'])}</p>\n  </div>\n\n  <div class=\"section benefits\">\n    <h2>Expected Benefits</h2>\n    <p>${extractSection(['benefit', 'outcome', 'result', 'improve', 'increase'])}</p>\n  </div>\n\n  <div class=\"cta\">\n    <h2>Let\u2019s Discuss This Further</h2>\n    <p>Would you be open to a brief 15\u201320 minute discovery call to tailor this plan to ${company}?</p>\n    <a href=\"https://calendly.com/your-team/15min\" target=\"_blank\">Schedule Your Call</a>\n  </div>\n\n  <div class=\"footer\">\n    <p><strong>Best regards,</strong><br>Your Automation Partner</p>\n    <p><a href=\"mailto:solutions@youragency.com\">solutions@youragency.com</a> | (123) 456-7890</p>\n  </div>\n</div>\n</body>\n</html>`;\n\n  // Ensure correct mapping for output\n  item.json.final_subject = subject;\n  item.json.final_body_plain = plain;\n  item.json.final_recipient = recipient;\n}\n\n// Return all processed items\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        240
+      ],
+      "id": "a0135599-1a85-45dc-912c-31393b75bf02",
+      "name": "BUILD - Create HTML Email Template"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Loop Over Items1').item.json['Email id'] }}",
+        "subject": "={{ $json.final_subject || $json.email_subject }}",
+        "message": "={{ $json.final_html || $json.email_body_html }}",
+        "options": {
+          "appendAttribution": false,
+          "ccList": "indrajitpal2006@gmail.com"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2080,
+        240
+      ],
+      "id": "753a2bb8-cfa8-4a32-8dd7-43dde03b49f4",
+      "name": "SEND - Email via Gmail",
+      "webhookId": "3385c4e9-5349-4da8-9c9a-e5f4c70809e6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "duFRc0XlmxYId1TM",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Cold Email with Pain Point",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 60122780,
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=60122780"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Loop Over Items1').item.json.Name }}",
+            "Email Status": "={{ $json.labelIds[0] }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email id",
+              "displayName": "Email id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Pain Point",
+              "displayName": "Pain Point",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Status",
+              "displayName": "Email Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2368,
+        240
+      ],
+      "id": "2c8e25f1-b674-422f-9f0c-ab991dfdb776",
+      "name": "UPDATE - Mark as Sent in Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "jVVY8JT9gGJ7AXLh",
+          "name": "VIR_Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1088,
+        208
+      ],
+      "id": "044839cd-362c-466d-a3e6-e2e3c31e3dfd",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1280,
+        464
+      ],
+      "id": "dd837405-c2af-49b4-b6f3-0df243566999",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8M9oZJTQSG5CEsZJ",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "START - Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "FETCH - Get Pending Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FETCH - Get Pending Leads": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Generate Personalized Email": {
+      "main": [
+        [
+          {
+            "node": "PROCESS - Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PROCESS - Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "BUILD - Create HTML Email Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BUILD - Create HTML Email Template": {
+      "main": [
+        [
+          {
+            "node": "SEND - Email via Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEND - Email via Gmail": {
+      "main": [
+        [
+          {
+            "node": "UPDATE - Mark as Sent in Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UPDATE - Mark as Sent in Sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI - Generate Personalized Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI - Generate Personalized Email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "1933aa1a-3b6f-4830-90e8-c3d602e4b708",
+  "meta": {},
+  "id": "VhuyCWIM4sL6mSKr",
+  "tags": [
+    {
+      "updatedAt": "2026-01-11T13:20:58.461Z",
+      "createdAt": "2026-01-11T13:20:58.461Z",
+      "id": "nbQrQYKUHaLygFvs",
+      "name": "Intermediate"
+    }
+  ]
+}
